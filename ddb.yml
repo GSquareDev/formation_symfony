@@ -1,0 +1,16 @@
+core:
+  domain:
+    sub: formation-symfony
+    ext: test
+  env:
+    available:
+      - prod
+      - recette
+      - integration
+      - ci
+      - dev
+docker:
+  port_prefix: 333
+  reverse_proxy:
+    redirect_to_https: false
+  build_image_tag_from_version: false

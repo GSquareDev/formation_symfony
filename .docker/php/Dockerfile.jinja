@@ -1,0 +1,41 @@
+FROM php:8.2-fpm-alpine3.19
+
+# Version des dépendances
+ENV MYSQL_VERSION 10.11.6-r0
+ENV PATCH_VERSION 2.7.6-r10
+ENV ZIP_VERSION 3.0-r12
+ENV UNZIP_VERSION 6.0-r14
+ENV GIT_VERSION 2.43.0-r0
+ENV COMPOSER_HOME /composer
+ENV PATH /composer/vendor/bin:$PATH
+ENV COMPOSER_ALLOW_SUPERUSER 1
+
+# Configuration de composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+RUN mkdir -p "$COMPOSER_HOME/cache" \
+&& mkdir -p "$COMPOSER_HOME/vendor" \
+&& chown -R www-data:www-data $COMPOSER_HOME \
+&& chown -R www-data:www-data /var/www
+
+# Symfony CLI
+RUN apk add --no-cache bash \
+&& curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' | bash \
+&& apk add symfony-cli
+
+RUN apk add --no-cache ${PHPIZE_DEPS} libpng-dev libjpeg-turbo-dev  build-base autoconf make
+
+RUN docker-php-ext-configure gd --with-jpeg
+
+RUN apk add --no-cache --virtual .build-deps ${PHPIZE_DEPS} \
+&& apk add --update linux-headers \
+&& pecl install xdebug && docker-php-ext-enable xdebug \
+&& apk del -f .build-deps
+
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS oniguruma-dev \
+&& docker-php-ext-install pdo pdo_mysql \
+&& apk add --no-cache mariadb-client=${MYSQL_VERSION} \
+&& apk del -f .build-deps
+RUN docker-php-ext-configure intl && docker-php-ext-install intl
+RUN apk add --no-cache git=${GIT_VERSION} zip=${ZIP_VERSION} unzip=${UNZIP_VERSION} patch=${PATCH_VERSION}
+VOLUME /composer/cache

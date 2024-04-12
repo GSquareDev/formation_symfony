@@ -1,0 +1,12 @@
+FROM node:latest
+
+WORKDIR /app
+
+USER node
+
+RUN yarn config set cafile ${NODE_EXTRA_CA_CERTS} --global
+RUN npm config set prefix /home/node/.npm-packages
+ENV PATH="${PATH}:/home/node/.npm-packages/bin"
+
+VOLUME /app
+VOLUME /home/node/.cache
