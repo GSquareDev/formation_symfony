@@ -36,6 +36,7 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS oniguruma-dev \
 && docker-php-ext-install pdo pdo_mysql \
 && apk add --no-cache mariadb-client=${MYSQL_VERSION} \
 && apk del -f .build-deps
-RUN docker-php-ext-configure intl && docker-php-ext-install intl
+RUN apk add --no-cache icu-dev
+RUN docker-php-ext-configure intl && docker-php-ext-install intl && docker-php-ext-enable intl
 RUN apk add --no-cache git=${GIT_VERSION} zip=${ZIP_VERSION} unzip=${UNZIP_VERSION} patch=${PATCH_VERSION}
 VOLUME /composer/cache
